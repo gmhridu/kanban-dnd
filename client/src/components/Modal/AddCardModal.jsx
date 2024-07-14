@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -12,31 +12,30 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import useAxiosCommon from "@/Hooks/useAxiosCommon";
 
 const AddCardModal = ({ adding, setAdding, columnId, setCards }) => {
-  const handleSubmit = (e) => {
+  const [title, setTitle] = useState('');
+
+  const axiosCommon = useAxiosCommon();
+
+  const handleAddCard = async (e) => {
     e.preventDefault();
-    const cardName = e.target.addCard.value;
-    console.log(cardName);
-
-    setCards((prevCards) => {
-      const newCard = {
-        id: new Date().getTime().toString(),
-        title: cardName,
-        column: columnId,
-      };
-      const updatedColumn = {
-        ...prevCards[columnId],
-        items: [...prevCards[columnId].items, newCard],
-      };
-      return {
+    try {
+      const newCard = { title, column: columnId };
+      const { data } = await axiosCommon.post('/cards', newCard);
+      setCards((prevCards) => ({
         ...prevCards,
-        [columnId]: updatedColumn,
-      };
-    });
-
-    setAdding(false);
+        [columnId]: [...prevCards[columnId], data],
+      }));
+      setAdding(false);
+      setTitle('');
+    } catch (error) {
+      console.error(error);
+    }
   };
+
+  if (!adding) return null;
 
   return (
     <Dialog open={adding} onOpenChange={setAdding}>
@@ -45,7 +44,7 @@ const AddCardModal = ({ adding, setAdding, columnId, setCards }) => {
         <DialogHeader className="border-b-2 pb-4">
           <DialogTitle>Add New Card</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleAddCard}>
           <div className="border-b-2 pb-8">
             <label htmlFor="addCard" className="text-base">
               <span className="text-red-500 text-sm">*</span>Title
@@ -55,6 +54,8 @@ const AddCardModal = ({ adding, setAdding, columnId, setCards }) => {
               id="addCard"
               required
               name="addCard"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Add New Card"
               className="mt-3 outline-none focus:outline-[#3b82f6]"
             />

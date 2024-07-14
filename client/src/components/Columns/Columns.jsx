@@ -12,12 +12,11 @@ const Columns = ({ title, headingColor, columnId, cards, setCards }) => {
       <div className="mb-3 flex items-center justify-between">
         <h3 className={`font-medium ${headingColor}`}>{title}</h3>
         <div className="flex items-center gap-x-2">
-          <AddCard cards={cards} columnId={columnId} setCards={setCards}/>
-        <span className="rounded text-sm text-neutral-400">
-          {cards?.length}
-        </span>
+          <AddCard cards={cards} columnId={columnId} setCards={setCards} />
+          <span className="rounded text-sm text-neutral-400">
+            {cards?.length}
+          </span>
         </div>
-        
       </div>
 
       <Droppable droppableId={columnId} type="group">

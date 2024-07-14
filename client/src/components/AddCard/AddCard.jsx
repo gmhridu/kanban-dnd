@@ -4,12 +4,18 @@ import React, { useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import AddCardModal from "../Modal/AddCardModal";
 
-const AddCard = ({cards, columnId, setCards}) => {
+const AddCard = ({ cards, columnId, setCards }) => {
   const [adding, setAdding] = useState(false);
 
   return (
     <>
-      <AddCardModal adding={adding} setAdding={setAdding} cards={cards} columnId={columnId} setCards={setCards}/>
+      <AddCardModal
+        adding={adding}
+        setAdding={setAdding}
+        cards={cards}
+        columnId={columnId}
+        setCards={setCards}
+      />
       {!adding && (
         <button
           onClick={() => setAdding(true)}

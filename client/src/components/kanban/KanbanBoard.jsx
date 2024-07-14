@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Columns from "@/components/Columns/Columns";
 import { DragDropContext } from "react-beautiful-dnd";
-import { DEFAULT_CARDS } from "@/lib/utils";
 import BurnBarrel from "@/components/BurnBarrel/BurnBarrel";
+import useAxiosCommon from "@/Hooks/useAxiosCommon";
 
 const getColor = (column) => {
   switch (column) {
@@ -20,63 +20,75 @@ const getColor = (column) => {
   }
 };
 
-const defaultCard = {
-  backlog: {
-    name: "Backlog",
-    items: DEFAULT_CARDS.filter((card) => card.column === "backlog"),
-  },
-  todo: {
-    name: "To Do",
-    items: DEFAULT_CARDS.filter((card) => card.column === "todo"),
-  },
-  doing: {
-    name: "Doing",
-    items: DEFAULT_CARDS.filter((card) => card.column === "doing"),
-  },
-  done: {
-    name: "Done",
-    items: DEFAULT_CARDS.filter((card) => card.column === "done"),
-  },
-};
-
 const KanbanBoard = () => {
-  const [cards, setCards] = useState(defaultCard);
+  const axiosCommon = useAxiosCommon();
+  const [cards, setCards] = useState({
+    backlog: [],
+    todo: [],
+    doing: [],
+    done: [],
+  });
 
-  const handleOnDragEnd = (result) => {
+  const getCards = async () => {
+    try {
+      const { data } = await axiosCommon.get('/cards');
+      return data;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        const data = await getCards();
+        const newCards = {
+          backlog: data.filter((card) => card.column === "backlog"),
+          todo: data.filter((card) => card.column === "todo"),
+          doing: data.filter((card) => card.column === "doing"),
+          done: data.filter((card) => card.column === "done"),
+        };
+        setCards(newCards);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchCards();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleOnDragEnd = async (result) => {
     if (!result.destination) return;
     const { source, destination } = result;
 
     if (source.droppableId !== destination.droppableId) {
       const sourceColumn = cards[source.droppableId];
       const destColumn = cards[destination.droppableId];
-      const sourceItems = [...sourceColumn.items];
-      const destItems = [...destColumn.items];
+      const sourceItems = [...sourceColumn];
+      const destItems = [...destColumn];
 
       const [removed] = sourceItems.splice(source.index, 1);
       destItems.splice(destination.index, 0, removed);
 
       setCards({
         ...cards,
-        [source.droppableId]: {
-          ...sourceColumn,
-          items: sourceItems,
-        },
-        [destination.droppableId]: {
-          ...destColumn,
-          items: destItems,
-        },
+        [source.droppableId]: sourceItems,
+        [destination.droppableId]: destItems,
       });
+
+      try {
+        await axiosCommon.put(`/cards/${removed._id}`, { column: destination.droppableId });
+      } catch (error) {
+        console.error(error);
+      }
     } else {
       const column = cards[source.droppableId];
-      const copiedItems = [...column.items];
+      const copiedItems = [...column];
       const [removed] = copiedItems.splice(source.index, 1);
       copiedItems.splice(destination.index, 0, removed);
       setCards({
         ...cards,
-        [source.droppableId]: {
-          ...column,
-          items: copiedItems,
-        },
+        [source.droppableId]: copiedItems,
       });
     }
   };
@@ -87,10 +99,10 @@ const KanbanBoard = () => {
         {Object.entries(cards).map(([columnId, column]) => (
           <Columns
             key={columnId}
-            title={column.name}
+            title={columnId}
             columnId={columnId}
             headingColor={getColor(columnId)}
-            cards={column.items}
+            cards={column}
             setCards={setCards}
           />
         ))}

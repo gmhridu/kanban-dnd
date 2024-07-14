@@ -2,13 +2,12 @@
 /* eslint-disable no-unused-vars */
 import React from "react";
 import { Draggable } from "react-beautiful-dnd";
-import DropIndicator from "@/components/DropIndicator/DropIndicator";
 
 const Cards = ({ cards }) => {
   return (
     <>
       {cards.map((card, index) => (
-        <Draggable key={card?.id} draggableId={card.id} index={index}>
+        <Draggable key={card?._id} draggableId={card._id} index={index}>
           {(provided, snapshot) => (
             <div
               ref={provided.innerRef}
@@ -19,7 +18,6 @@ const Cards = ({ cards }) => {
               }`}
             >
               <p className="text-sm text-neutral-100">{card.title}</p>
-              {/* <DropIndicator beforeId={card?.id} card={card}/> */}
             </div>
           )}
         </Draggable>
